@@ -648,6 +648,24 @@ function doRegister(){
   noticeP('✅ Reserva enviada! Ref: #'+rf+'. El admin verificará tu pago.','#2E7D32');
 }
 
+// ── WHATSAPP HELPER ──────────────────────────────────────
+function waLink(nm){
+  var r=G.refs.find(function(x){return x.nm===nm;});
+  if(!r||!r.ph)return null;
+  var clean=r.ph.replace(/\D/g,'').replace(/^0/,'');
+  return 'https://wa.me/58'+clean;
+}
+function waBtn(nm,size){
+  var url=waLink(nm);
+  if(!url)return '';
+  var s=size||'13px';
+  return '<a href="'+url+'" target="_blank" '+
+    'style="display:inline-flex;align-items:center;gap:5px;background:#25D366;color:#fff;'+
+    'border-radius:99px;padding:5px 12px;font-size:'+s+';font-weight:900;text-decoration:none;'+
+    'margin-left:8px;white-space:nowrap">'+
+    '📲 WhatsApp</a>';
+}
+
 // ── WINNER ───────────────────────────────────────────────
 function showWin(ws,pat,cl,pot){
   pFan();showConf();
@@ -657,8 +675,9 @@ function showWin(ws,pat,cl,pot){
     prize:ea,pot:pot.toFixed(2),ts:new Date().toLocaleTimeString('es-VE'),cnt:G.called.length});
   var isLast=G.currentRound>=G.rounds.length-1;
   var rows=ws.map(function(w){
-    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #EDD9AA">'+
-      '<b>⭐ '+w+'</b><span style="color:#1B5E20;font-weight:900;font-size:18px">'+fBs(ea)+'</span></div>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #EDD9AA;flex-wrap:wrap;gap:6px">'+
+      '<div style="display:flex;align-items:center;gap:6px"><b>⭐ '+w+'</b>'+waBtn(w,'12px')+'</div>'+
+      '<span style="color:#1B5E20;font-weight:900;font-size:18px">'+fBs(ea)+'</span></div>';
   }).join('');
   document.getElementById('winContent').innerHTML=
     '<div style="background:#FFF3DC;border:2px solid #E8C870;border-radius:10px;padding:8px 12px;margin-bottom:10px">'+
@@ -982,7 +1001,11 @@ function bHistory(){
       return '<tr><td style="font-weight:800;color:#8B1A1A">'+h.rnd+'</td>'+
         '<td><span style="background:#FFF3DC;border:1px solid #E8C870;border-radius:8px;padding:2px 8px;font-weight:700;font-size:11px">'+h.pat+'</span></td>'+
         '<td><span style="background:'+CLR[lof(h.closing)]+';color:#fff;border-radius:99px;padding:2px 8px;font-weight:900;font-size:12px">'+lof(h.closing)+'-'+h.closing+'</span></td>'+
-        '<td style="font-weight:800">'+h.winners.join(', ')+'</td>'+
+        '<td>'+h.winners.map(function(w){
+          return '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 0">'+
+            '<span style="font-weight:800">'+w+'</span>'+waBtn(w,'11px')+
+          '</span>';
+        }).join('<br/>')+'</td>'+
         '<td style="font-weight:900;color:#2E7D32">'+fBs(h.prize)+'</td>'+
         '<td style="text-align:center;color:#8B5E00;font-weight:700">'+h.cnt+'</td>'+
         '<td style="color:#8B5E00;font-size:11px">'+h.ts+'</td></tr>';
