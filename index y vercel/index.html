@@ -281,7 +281,7 @@ input[type=range]{width:100%;accent-color:#8B1A1A;margin-bottom:8px}
     <label class="lbl">🔢 Últimos 8 dígitos de la referencia</label>
     <input class="inp" id="rRef" maxlength="8" placeholder="12345678" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8);updCost()"/>
     <label class="lbl">🃏 Cantidad de cartones</label>
-    <input class="inp" id="rQty" type="number" min="1" placeholder="1" oninput="updCost()"/>
+    <input class="inp" id="rQty" type="number" placeholder="Ej: 2" oninput="updCost()"/>
     <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:12px 14px;margin-bottom:14px;border:2px solid #43A047">
       <p style="font-size:12px;font-weight:700;color:#1B5E20;margin-bottom:4px">💰 Total a cancelar:</p>
       <p id="rTotal" class="fk" style="font-size:26px;font-weight:900;color:#1B5E20">Bs. 0,00</p>
@@ -616,9 +616,10 @@ function updCost(){
     document.getElementById('rAvail').textContent='Quedan '+left+' cartones disponibles';
     return;
   }
-  var q=Math.max(1,parseInt(raw)||1);
+  var q=parseInt(raw)||0;
+  if(q<1)q=1;
   if(q>left)q=left;
-  document.getElementById('rQty').value=q;
+  // NO se fuerza el valor de vuelta al input para permitir edición libre
   document.getElementById('rTotal').textContent=fBs(q*G.priceBs);
   document.getElementById('rAvail').textContent='Quedan '+left+' cartones disponibles';
 }
@@ -756,7 +757,7 @@ function bCalc(){
     '<p style="color:#8B5E00;font-size:12px;font-weight:700;margin-bottom:10px">¿Cuántos cartones quieres? Calcula tu monto antes de pagar:</p>'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
     '<label class="lbl" style="margin-bottom:0;white-space:nowrap">Cartones:</label>'+
-    '<input type="number" min="1" max="'+cartonsLeft()+'" value="" placeholder="1" id="calcQty"'+
+    '<input type="number" max="'+cartonsLeft()+'" value="" placeholder="Ej: 2" id="calcQty"'+
     ' style="flex:1;background:#FFF8EC;border:2px solid #E8C870;border-radius:11px;padding:8px 12px;color:#3D1A00;font-size:16px;outline:none;font-family:Nunito,sans-serif;font-weight:800;text-align:center"'+
     ' oninput="updCalc()"/>'+
     '</div>'+
@@ -857,12 +858,18 @@ function bAdmin(){
     }).join('');
     return '<div class="rnd-cfg">'+
       '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:6px">'+
-      '<input class="inp" style="margin-bottom:0;font-size:13px" value="'+r.name+'" oninput="G.rounds['+i+'].name=this.value;renderAdmin()"/>'+
+      '<input class="inp" style="margin-bottom:0;font-size:13px" value="'+r.name+'" oninput="G.rounds['+i+'].name=this.value"/>'+
       '<button class="btn br" style="padding:5px 10px;font-size:12px;border-radius:8px" onclick="removeRnd('+i+')">✗</button></div>'+
       '<select class="sel" style="margin-bottom:0" onchange="G.rounds['+i+'].mode=this.value;renderAdmin()">'+modeOpts+'</select></div>';
   }).join('');
 
   return (
+    '<div class="card" style="border-color:#43A047;background:linear-gradient(135deg,#E8F5E9,#F1F8E9);padding:14px">'+
+    '<div class="stitle" style="color:#1B5E20;border-color:#A5D6A7;margin-bottom:8px">💾 Guardar Cambios</div>'+
+    '<button class="btn bg" style="width:100%;padding:14px;font-size:16px;border-radius:14px" onclick="saveAdminChanges()">💾 Guardar y Sincronizar con Jugadores</button>'+
+    '<p style="color:#388E3C;font-size:11px;font-weight:700;text-align:center;margin-top:8px">Aplica precio, cartones, rondas y todos los cambios del panel</p>'+
+    '</div>'+
+
     '<div class="card"><div class="stitle">⚙️ Control de Partida</div>'+
     '<div style="margin-bottom:12px">'+rPills+'</div>'+
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'+
@@ -880,17 +887,17 @@ function bAdmin(){
 
     '<div class="card"><div class="stitle">🃏 Límite de Cartones</div>'+
     '<label class="lbl">Máximo de cartones por partida</label>'+
-    '<input class="inp" type="number" min="10" max="9999" value="'+G.cardLimit+'" oninput="G.cardLimit=+this.value||G.cardLimit;renderBoth()"/>'+
+    '<input class="inp" type="number" id="aCardLimit" min="10" max="9999" value="'+G.cardLimit+'" oninput="var v=parseInt(this.value)||0;if(v>=1){G.cardLimit=v;var d=document.getElementById(\'aLimitDisp\');if(d)d.textContent=G.tc+\' / \'+cartonsLeft()+\' / \'+v;}"/>'+
     '<div style="background:linear-gradient(135deg,#7B0D0D,#9B1515);border-radius:12px;padding:12px;text-align:center;border:2px solid #F5C842">'+
     '<p style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700">Vendidos / Disponibles / Límite</p>'+
-    '<p class="fk" style="color:#F5C842;font-size:22px">'+G.tc+' / '+cartonsLeft()+' / '+G.cardLimit+'</p></div></div>'+
+    '<p class="fk" id="aLimitDisp" style="color:#F5C842;font-size:22px">'+G.tc+' / '+cartonsLeft()+' / '+G.cardLimit+'</p></div></div>'+
 
     '<div class="card"><div class="stitle">💵 Precio por Cartón</div>'+
     '<label class="lbl">Precio en Bolívares (Bs.)</label>'+
-    '<input class="inp" type="number" min="1" step="0.5" value="'+G.priceBs+'" oninput="G.priceBs=+this.value||G.priceBs;renderBoth()" placeholder="Ej: 50"/>'+
+    '<input class="inp" type="number" id="aPrice" min="1" step="0.5" value="'+G.priceBs+'" oninput="var v=parseFloat(this.value)||0;if(v>0){G.priceBs=v;var d=document.getElementById(\'aPriceDisp\');if(d)d.textContent=fBs(v);}" placeholder="Ej: 50"/>'+
     '<div class="pmbox" style="text-align:center;padding:12px">'+
     '<p class="pmtit">Precio actual por cartón</p>'+
-    '<p class="pmval" style="font-size:26px">'+fBs(G.priceBs)+'</p></div></div>'+
+    '<p class="pmval" id="aPriceDisp" style="font-size:26px">'+fBs(G.priceBs)+'</p></div></div>'+
 
     '<div class="card"><div class="stitle">📲 Datos Pago Móvil</div>'+
     '<label class="lbl">Banco</label><input class="inp" value="'+G.pm.banco+'" oninput="G.pm.banco=this.value;updPMBoxes()"/>'+
@@ -916,6 +923,10 @@ function bAdmin(){
     '<label class="lbl">Nueva contraseña (admin)</label>'+
     '<input class="inp" type="password" id="aPwdNew" placeholder="Nueva contraseña..."/>'+
     '<button class="btn bt" style="width:100%;padding:10px" onclick="changePwd()">🔐 Cambiar</button></div>'+
+
+    '<div class="card" style="border-color:#43A047;background:linear-gradient(135deg,#E8F5E9,#F1F8E9);padding:14px">'+
+    '<button class="btn bg" style="width:100%;padding:14px;font-size:16px;border-radius:14px" onclick="saveAdminChanges()">💾 Guardar y Sincronizar con Jugadores</button>'+
+    '</div>'+
 
     '<div class="card"><div class="stitle">👥 Jugadores ('+G.players.length+')</div>'+
     (G.players.length?G.players.map(function(p){
@@ -997,6 +1008,19 @@ function apRef(id,ok){
   renderBoth();
 }
 function updPMBoxes(){var el=document.getElementById('pPMBox');if(el)el.innerHTML=bPMBox();}
+function saveAdminChanges(){
+  // Leer valores actuales de los inputs del admin
+  var priceEl=document.getElementById('aPrice');
+  if(priceEl){var pv=parseFloat(priceEl.value)||0;if(pv>0)G.priceBs=pv;}
+  var limitEl=document.getElementById('aCardLimit');
+  if(limitEl){var lv=parseInt(limitEl.value)||0;if(lv>=1)G.cardLimit=lv;}
+  // Renderizar ambas vistas (admin + jugador)
+  renderBoth();
+  noticeA('✅ Cambios guardados y sincronizados con la vista del jugador','#2E7D32');
+  // Hacer scroll al top del panel
+  var aLeft=document.getElementById('aLeft');
+  if(aLeft)aLeft.scrollTop=0;
+}
 function changePwd(){
   var el=document.getElementById('aPwdNew');if(!el)return;
   var v=el.value.trim();if(v.length<4){noticeA('⚠️ Mínimo 4 caracteres','#E65100');return;}
@@ -1013,8 +1037,10 @@ function updCalc(){
     if(sub2)sub2.textContent='Ingresa la cantidad de cartones';
     return;
   }
-  var q=Math.max(1,Math.min(left,parseInt(raw)||1));
-  el.value=q;
+  var q=parseInt(raw)||0;
+  if(q<1)q=1;
+  if(q>left)q=left;
+  // NO se fuerza el valor de vuelta al input para permitir edición libre
   var res=document.getElementById('calcResult');
   if(res)res.textContent=fBs(q*G.priceBs);
   var sub=document.getElementById('calcSubtitle');
