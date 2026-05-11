@@ -541,8 +541,18 @@ function callOne(){
         wf=true;
         var un=ws.filter(function(v,i,a){return a.indexOf(v)===i;});
         var totalPot=G.tc*G.priceBs*.9;
-        var totalPct=G.rounds.reduce(function(s,r){return s+((r.pct)||0);},0)||100;
-        var rndPct=(G.rounds[G.currentRound]&&G.rounds[G.currentRound].pct!=null)?G.rounds[G.currentRound].pct:(100/G.rounds.length);
+        // Sum of all round pcts; fallback: split equally
+        var allPcts=G.rounds.map(function(r){return typeof r.pct==='number'&&r.pct>0?r.pct:0;});
+        var totalPct=allPcts.reduce(function(s,v){return s+v;},0);
+        var rndPct;
+        if(totalPct>0){
+          // Use configured pct for this round; if 0 it gets 0 (admin chose that)
+          rndPct=allPcts[G.currentRound]||0;
+        }else{
+          // No pcts configured → split equally
+          rndPct=100/G.rounds.length;
+          totalPct=100;
+        }
         var pot=totalPot*(rndPct/totalPct);
         setTimeout(function(){showWin(un,pt,n,pot);},400);
         setPhase('finished');
@@ -674,7 +684,10 @@ function waBtn(nm,size){
 function showWin(ws,pat,cl,pot){
   pFan();showConf();
   var l=lof(cl);var ea=(pot/Math.max(ws.length,1)).toFixed(2);
-  var rndName=G.currentRound<G.rounds.length?G.rounds[G.currentRound].name:'Ronda';
+  var rndIdx=Math.min(G.currentRound,G.rounds.length-1);
+  var rndName=G.rounds[rndIdx]?G.rounds[rndIdx].name:'Ronda';
+  var rndPctShow=G.rounds[rndIdx]?G.rounds[rndIdx].pct||0:0;
+  var totalPotShow=G.tc*G.priceBs*.9;
   G.history.push({rnd:rndName,pat:pat,closing:cl,winners:ws.slice(),
     prize:ea,pot:pot.toFixed(2),ts:new Date().toLocaleTimeString('es-VE'),cnt:G.called.length});
   var isLast=G.currentRound>=G.rounds.length-1;
@@ -693,8 +706,9 @@ function showWin(ws,pat,cl,pot){
     '<div style="background:#FFF8EC;border:2px solid #E8C870;border-radius:12px;padding:12px;margin-bottom:10px">'+
     '<p style="color:#8B5E00;font-size:11px;margin-bottom:6px">🏆 Ganador'+(ws.length>1?'es':'')+':</p>'+rows+'</div>'+
     '<div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:2px solid #43A047;border-radius:12px;padding:12px;margin-bottom:8px">'+
-    '<p style="color:#1B5E20;font-size:11px;font-weight:700">🎯 Premio (90% del bote)</p>'+
-    '<p class="fk" style="color:#1B5E20;font-size:30px;line-height:1">'+fBs(pot)+'</p></div>'+
+    '<p style="color:#1B5E20;font-size:11px;font-weight:700">🎯 Premio '+rndName+' ('+rndPctShow+'% del bote)</p>'+
+    '<p class="fk" style="color:#1B5E20;font-size:30px;line-height:1">'+fBs(pot)+'</p>'+
+    '<p style="color:#2E7D32;font-size:10px;font-weight:700;margin-top:2px">Bote total jugadores: '+fBs(totalPotShow)+'</p></div>'+
     (isLast?'<p style="color:#8B1A1A;font-weight:800;font-size:13px">🏁 ¡Última ronda! Gracias por jugar.</p>':
       '<p style="color:#00695C;font-weight:800;font-size:13px">➡️ Siguiente: '+(G.currentRound+1<G.rounds.length?G.rounds[G.currentRound+1].name+' ('+MODE_LABELS[G.rounds[G.currentRound+1].mode]+')':'Fin')+'</p>');
   document.getElementById('winMod').style.display='flex';
@@ -742,25 +756,35 @@ function bTomb(){
     '<p style="text-align:center;color:#8B5E00;font-size:11px;margin-top:10px;font-weight:700">'+G.called.length+'/75 números cantados</p>';
 }
 
+
 // ── BUILD CARD ────────────────────────────────────────────
-function bCard(card,ca,lbl,win,pat,mode,compact){
-  var cs=compact?'22px':'38px', fs=compact?'10px':'13px', hs=compact?'28px':'36px', hfs=compact?'13px':'17px';
-  var mw=compact?'':'max-width:230px;';
-  var hdr=lbl?'<p style="text-align:center;font-size:'+(compact?'10px':'11px')+';color:#5C2800;font-weight:800;margin-bottom:'+(compact?'3px':'6px')+'">'+lbl+'</p>':'';
-  var ch=LTRS.map(function(l){return '<div style="height:'+hs+';display:flex;align-items:center;justify-content:center;border-radius:'+(compact?'5px':'7px')+';background:'+CLR[l]+';color:#fff;font-size:'+hfs+'" class="fk">'+l+'</div>';}).join('');
+// size: 'normal' | 'compact' | 'mini' (mobile 9-per-screen)
+function bCard(card,ca,lbl,win,pat,mode,size){
+  var mini=size==='mini', compact=size==='compact'||mini;
+  var cs=mini?'18px':compact?'24px':'38px';
+  var fs=mini?'8px':compact?'10px':'13px';
+  var hs=mini?'16px':compact?'22px':'36px';
+  var hfs=mini?'9px':compact?'12px':'17px';
+  var pad=mini?'4px':compact?'7px':'12px';
+  var gap=mini?'1px':'2px';
+  var br=mini?'8px':compact?'12px':'18px';
+  var lfs=mini?'7px':compact?'9px':'11px';
+  var lmb=mini?'2px':compact?'3px':'6px';
+  var hdr=lbl?'<p style="text-align:center;font-size:'+lfs+';color:#5C2800;font-weight:800;margin-bottom:'+lmb+';line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lbl+'</p>':'';
+  var ch=LTRS.map(function(l){return '<div style="height:'+hs+';display:flex;align-items:center;justify-content:center;border-radius:'+(mini?'3px':'5px')+';background:'+CLR[l]+';color:#fff;font-size:'+hfs+'" class="fk">'+l+'</div>';}).join('');
   var cells='';
   for(var row=0;row<5;row++){
     for(var col=0;col<5;col++){
       var fr=col===2&&row===2,nm=fr?0:card[col][row],on=ion(card,row,col,ca);
-      var isWinCell=win&&on;
-      var cls='cell'+(fr?' cfree':on?' con'+(isWinCell?' cwin':''):'');
-      cells+='<div class="'+cls+'" style="height:'+cs+';font-size:'+fs+'">'+(fr?(compact?'★':'LIBRE'):nm)+'</div>';
+      var cls='cell'+(fr?' cfree':on?' con'+(win&&on?' cwin':''):'');
+      cells+='<div class="'+cls+'" style="height:'+cs+';font-size:'+fs+'">'+(fr?'★':nm)+'</div>';
     }
   }
-  return '<div style="border-radius:'+(compact?'12px':'18px')+';padding:'+(compact?'7px':'12px')+';'+mw+'width:100%;background:#FFFAF0;border:'+(win?'3px solid #F5C842':'2px solid #EDD9AA')+';box-shadow:'+(win?'0 0 28px rgba(212,160,23,.5)':'0 3px 14px rgba(139,26,26,.1)')+'">'+
-    hdr+'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+(compact?'2px':'3px')+';margin-bottom:'+(compact?'2px':'3px')+'">'+ch+'</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+(compact?'2px':'3px')+'">'+cells+'</div>'+
-    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:'+(compact?'10px':'13px')+';margin-top:'+(compact?'4px':'6px')+'">🏆 '+pat+'</p>':'')+
+  return '<div style="border-radius:'+br+';padding:'+pad+';width:100%;background:#FFFAF0;border:'+(win?'2px solid #F5C842':'1px solid #EDD9AA')+';box-shadow:'+(win?'0 0 12px rgba(212,160,23,.5)':'0 2px 6px rgba(139,26,26,.08)')+'">'+
+    hdr+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+';margin-bottom:'+gap+'">'+ch+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+'">'+cells+'</div>'+
+    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:'+(mini?'7px':'10px')+';margin-top:'+(mini?'2px':'3px')+'">🏆</p>':'')+
     '</div>';
 }
 
@@ -1189,14 +1213,28 @@ function renderPlayer(){
     var p=G.me,mode=curMode();
     var pats=p.cards.map(function(c){return dw(c,G.called,mode);});
     var aw=pats.some(function(x){return x;});
-    var isMobile=window.innerWidth<=600;
-    var compact=isMobile&&p.cards.length>1;
-    var cols=compact?3:(p.cards.length>=4?4:p.cards.length||1);
-    // Container: on mobile 3-col scrollable showing ~9 cards; desktop flex-wrap
-    var containerH=compact?Math.ceil(9/3)*(isMobile?170:220)+'px':'none';
-    var ch='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:'+(compact?'6px':'12px')+';'+(compact&&p.cards.length>9?'max-height:'+containerH+';overflow-y:auto;padding-right:4px;-webkit-overflow-scrolling:touch;':'')+'">';
-    p.cards.forEach(function(c,i){ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode,compact);});
+    var isMobile=window.innerWidth<=640;
+    // On mobile: 3 cols, mini size, max 3 rows visible (~9 cards), scroll for more
+    // On desktop: flex wrap, normal or compact
+    var cardSize=isMobile?'mini':(p.cards.length>3?'compact':'normal');
+    var cols=isMobile?3:(p.cards.length>=4?4:p.cards.length||1);
+    var gap=isMobile?'5px':'12px';
+    // Mobile: fixed height = 3 rows. Estimate one card row height (px) based on mini card
+    // mini card: label(~14px) + header row(~18px) + 5 cell rows(~20px each) + gaps + padding ≈ 140px
+    var rowH=isMobile?148:250;
+    var showRows=3;
+    var gridStyle='display:grid;grid-template-columns:repeat('+cols+',1fr);gap:'+gap+';';
+    if(isMobile){
+      gridStyle+='max-height:'+(rowH*showRows+gap.replace('px','')*2)+'px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 4px 2px;';
+    }
+    var ch='<div style="'+gridStyle+'">';
+    p.cards.forEach(function(c,i){
+      ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode,cardSize);
+    });
     ch+='</div>';
+    if(isMobile&&p.cards.length>9){
+      ch+='<p style="text-align:center;color:#8B5E00;font-size:11px;font-weight:700;margin-top:6px">↕ Desliza para ver todos los cartones</p>';
+    }
     var wb=aw?'<div style="background:linear-gradient(135deg,#D4A017,#FB8C00);border-radius:12px;padding:8px 16px;border:2px solid #8B1A1A"><p style="color:#fff;font-weight:900">🏆 '+pats.find(function(x){return x;})+'</p></div>':'';
     pr.innerHTML=
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">'+
