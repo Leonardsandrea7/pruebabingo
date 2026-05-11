@@ -326,9 +326,9 @@ var G={
   priceBs:10,
   cardLimit:300,
   rounds:[
-    {id:1,name:'Ronda 1',mode:'lines',done:false},
-    {id:2,name:'Ronda 2',mode:'corners',done:false},
-    {id:3,name:'Ronda 3',mode:'full',done:false}
+    {id:1,name:'Ronda 1',mode:'lines',done:false,pct:20},
+    {id:2,name:'Ronda 2',mode:'corners',done:false,pct:30},
+    {id:3,name:'Ronda 3',mode:'full',done:false,pct:50}
   ],
   currentRound:0,
   pm:{banco:'Banesco',tel:'0412-1234567',ci:'V-12345678',nom:'Maidaly Macho'},
@@ -540,7 +540,10 @@ function callOne(){
       if(ws.length){
         wf=true;
         var un=ws.filter(function(v,i,a){return a.indexOf(v)===i;});
-        var pot=G.tc*G.priceBs*.9;
+        var totalPot=G.tc*G.priceBs*.9;
+        var totalPct=G.rounds.reduce(function(s,r){return s+((r.pct)||0);},0)||100;
+        var rndPct=(G.rounds[G.currentRound]&&G.rounds[G.currentRound].pct!=null)?G.rounds[G.currentRound].pct:(100/G.rounds.length);
+        var pot=totalPot*(rndPct/totalPct);
         setTimeout(function(){showWin(un,pt,n,pot);},400);
         setPhase('finished');
       }
@@ -648,6 +651,25 @@ function doRegister(){
   noticeP('✅ Reserva enviada! Ref: #'+rf+'. El admin verificará tu pago.','#2E7D32');
 }
 
+// ── WHATSAPP HELPER ──────────────────────────────────────
+function waLink(nm){
+  var r=G.refs.find(function(x){return x.nm===nm;});
+  if(!r||!r.ph)return null;
+  var clean=r.ph.replace(/\D/g,'').replace(/^0/,'');
+  return 'https://wa.me/58'+clean;
+}
+function waBtn(nm,size){
+  if(G.role!=='admin')return '';
+  var url=waLink(nm);
+  if(!url)return '';
+  var s=size||'13px';
+  return '<a href="'+url+'" target="_blank" '+
+    'style="display:inline-flex;align-items:center;gap:5px;background:#25D366;color:#fff;'+
+    'border-radius:99px;padding:5px 12px;font-size:'+s+';font-weight:900;text-decoration:none;'+
+    'margin-left:8px;white-space:nowrap">'+
+    '📲 WhatsApp</a>';
+}
+
 // ── WINNER ───────────────────────────────────────────────
 function showWin(ws,pat,cl,pot){
   pFan();showConf();
@@ -657,8 +679,9 @@ function showWin(ws,pat,cl,pot){
     prize:ea,pot:pot.toFixed(2),ts:new Date().toLocaleTimeString('es-VE'),cnt:G.called.length});
   var isLast=G.currentRound>=G.rounds.length-1;
   var rows=ws.map(function(w){
-    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #EDD9AA">'+
-      '<b>⭐ '+w+'</b><span style="color:#1B5E20;font-weight:900;font-size:18px">'+fBs(ea)+'</span></div>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #EDD9AA;flex-wrap:wrap;gap:6px">'+
+      '<div style="display:flex;align-items:center;gap:6px"><b>⭐ '+w+'</b>'+waBtn(w,'12px')+'</div>'+
+      '<span style="color:#1B5E20;font-weight:900;font-size:18px">'+fBs(ea)+'</span></div>';
   }).join('');
   document.getElementById('winContent').innerHTML=
     '<div style="background:#FFF3DC;border:2px solid #E8C870;border-radius:10px;padding:8px 12px;margin-bottom:10px">'+
@@ -720,22 +743,24 @@ function bTomb(){
 }
 
 // ── BUILD CARD ────────────────────────────────────────────
-function bCard(card,ca,lbl,win,pat,mode){
-  var hdr=lbl?'<p style="text-align:center;font-size:11px;color:#5C2800;font-weight:800;margin-bottom:6px">'+lbl+'</p>':'';
-  var ch=LTRS.map(function(l){return '<div style="height:36px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:'+CLR[l]+';color:#fff;font-size:17px" class="fk">'+l+'</div>';}).join('');
+function bCard(card,ca,lbl,win,pat,mode,compact){
+  var cs=compact?'22px':'38px', fs=compact?'10px':'13px', hs=compact?'28px':'36px', hfs=compact?'13px':'17px';
+  var mw=compact?'':'max-width:230px;';
+  var hdr=lbl?'<p style="text-align:center;font-size:'+(compact?'10px':'11px')+';color:#5C2800;font-weight:800;margin-bottom:'+(compact?'3px':'6px')+'">'+lbl+'</p>':'';
+  var ch=LTRS.map(function(l){return '<div style="height:'+hs+';display:flex;align-items:center;justify-content:center;border-radius:'+(compact?'5px':'7px')+';background:'+CLR[l]+';color:#fff;font-size:'+hfs+'" class="fk">'+l+'</div>';}).join('');
   var cells='';
   for(var row=0;row<5;row++){
     for(var col=0;col<5;col++){
       var fr=col===2&&row===2,nm=fr?0:card[col][row],on=ion(card,row,col,ca);
       var isWinCell=win&&on;
       var cls='cell'+(fr?' cfree':on?' con'+(isWinCell?' cwin':''):'');
-      cells+='<div class="'+cls+'">'+(fr?'LIBRE':nm)+'</div>';
+      cells+='<div class="'+cls+'" style="height:'+cs+';font-size:'+fs+'">'+(fr?(compact?'★':'LIBRE'):nm)+'</div>';
     }
   }
-  return '<div style="border-radius:18px;padding:12px;max-width:230px;width:100%;background:#FFFAF0;border:'+(win?'3px solid #F5C842':'2px solid #EDD9AA')+';box-shadow:'+(win?'0 0 28px rgba(212,160,23,.5)':'0 3px 14px rgba(139,26,26,.1)')+'">'+
-    hdr+'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:3px">'+ch+'</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px">'+cells+'</div>'+
-    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:13px;margin-top:6px">🏆 '+pat+'</p>':'')+
+  return '<div style="border-radius:'+(compact?'12px':'18px')+';padding:'+(compact?'7px':'12px')+';'+mw+'width:100%;background:#FFFAF0;border:'+(win?'3px solid #F5C842':'2px solid #EDD9AA')+';box-shadow:'+(win?'0 0 28px rgba(212,160,23,.5)':'0 3px 14px rgba(139,26,26,.1)')+'">'+
+    hdr+'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+(compact?'2px':'3px')+';margin-bottom:'+(compact?'2px':'3px')+'">'+ch+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+(compact?'2px':'3px')+'">'+cells+'</div>'+
+    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:'+(compact?'10px':'13px')+';margin-top:'+(compact?'4px':'6px')+'">🏆 '+pat+'</p>':'')+
     '</div>';
 }
 
@@ -856,12 +881,24 @@ function bAdmin(){
     var modeOpts=['lines','corners','full','letter','letraL','letraT'].map(function(m){
       return '<option value="'+m+'"'+(r.mode===m?' selected':'')+'>'+MODE_LABELS[m]+'</option>';
     }).join('');
+    var totalPct2=G.rounds.reduce(function(s,rx){return s+(rx.pct||0);},0)||100;
+    var rndPot=(G.tc*G.priceBs*.9)*((r.pct||0)/totalPct2);
     return '<div class="rnd-cfg">'+
       '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:6px">'+
       '<input class="inp" style="margin-bottom:0;font-size:13px" value="'+r.name+'" oninput="G.rounds['+i+'].name=this.value"/>'+
       '<button class="btn br" style="padding:5px 10px;font-size:12px;border-radius:8px" onclick="removeRnd('+i+')">✗</button></div>'+
-      '<select class="sel" style="margin-bottom:0" onchange="G.rounds['+i+'].mode=this.value;renderAdmin()">'+modeOpts+'</select></div>';
+      '<select class="sel" style="margin-bottom:6px" onchange="G.rounds['+i+'].mode=this.value;renderAdmin()">'+modeOpts+'</select>'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'+
+      '<label style="font-size:12px;font-weight:800;color:#5C2800;white-space:nowrap;min-width:80px">🏆 % del bote:</label>'+
+      '<input type="number" min="0" max="100" value="'+(r.pct||0)+'" '+
+      'style="width:72px;background:#FFF8EC;border:2px solid #E8C870;border-radius:10px;padding:6px 10px;color:#3D1A00;font-size:15px;font-weight:900;outline:none;font-family:Nunito,sans-serif;text-align:center" '+
+      'oninput="G.rounds['+i+'].pct=parseInt(this.value)||0;renderAdmin()"/>'+
+      '<span style="font-size:11px;color:#2E7D32;font-weight:800;line-height:1.3">del 90%<br>≈ '+fBs(rndPot)+'</span></div>'+
+      '</div>';
   }).join('');
+  var totalPctCheck=G.rounds.reduce(function(s,r){return s+(r.pct||0);},0);
+  var pctWarning=totalPctCheck!==100?'<div style="background:#FFF3DC;border:2px solid #FB8C00;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:12px;font-weight:800;color:#E65100">⚠️ Los porcentajes suman '+totalPctCheck+'%. Se recomienda que sumen 100%.</div>':
+    '<div style="background:#E8F5E9;border:2px solid #43A047;border-radius:10px;padding:6px 12px;margin-top:8px;font-size:12px;font-weight:800;color:#2E7D32">✅ Los porcentajes suman 100%</div>';
 
   return (
     '<div class="card" style="border-color:#43A047;background:linear-gradient(135deg,#E8F5E9,#F1F8E9);padding:14px">'+
@@ -882,8 +919,12 @@ function bAdmin(){
     '</div>'+
 
     '<div class="card"><div class="stitle">🎯 Rondas de la Partida</div>'+
+    '<div style="background:linear-gradient(135deg,#7B0D0D,#9B1515);border-radius:10px;padding:8px 12px;margin-bottom:10px;border:2px solid #F5C842">'+
+    '<p style="color:#FFE082;font-size:12px;font-weight:800;text-align:center">🏠 El 10% de Admin siempre está garantizado.<br>Los % de cada ronda se aplican sobre el 90% del bote.</p>'+
+    '</div>'+
     rCfg+
-    '<button class="btn bt" style="width:100%;padding:9px;font-size:13px;margin-top:4px" onclick="addRnd()">+ Agregar Ronda</button></div>'+
+    pctWarning+
+    '<button class="btn bt" style="width:100%;padding:9px;font-size:13px;margin-top:8px" onclick="addRnd()">+ Agregar Ronda</button></div>'+
 
     '<div class="card"><div class="stitle">🃏 Límite de Cartones</div>'+
     '<label class="lbl">Máximo de cartones por partida</label>'+
@@ -914,10 +955,31 @@ function bAdmin(){
 
     '<div class="card"><div class="stitle">💸 Finanzas</div>'+
     rw('Cartones vendidos',''+G.tc)+rw('Ingresos totales',fBs(totBs))+'<div class="sep"></div>'+
-    rwc('🏠 Casa (10%)',fBs(hseBs),'#C0392B')+
-    '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;align-items:center">'+
-    '<span style="color:#2E7D32;font-weight:800">🎯 Bote (90%)</span>'+
-    '<p class="fk" style="color:#1B5E20;font-size:22px">'+fBs(potBs)+'</p></div></div>'+
+    '<div style="background:linear-gradient(135deg,#7B0D0D,#9B1515);border-radius:10px;padding:10px 14px;margin-bottom:6px;border:2px solid #F5C842;display:flex;justify-content:space-between;align-items:center">'+
+    '<span style="color:#FFE082;font-weight:900;font-size:13px">🏠 Admin (10% fijo siempre)</span>'+
+    '<span class="fk" style="color:#F5C842;font-size:20px">'+fBs(hseBs)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;align-items:center;border-bottom:2px dashed #EDD9AA;margin-bottom:6px">'+
+    '<span style="color:#2E7D32;font-weight:800">🎯 Bote jugadores (90%)</span>'+
+    '<p class="fk" style="color:#1B5E20;font-size:22px">'+fBs(potBs)+'</p></div>'+
+    '<div style="background:#FFF3DC;border:2px solid #E8C870;border-radius:12px;padding:10px;margin-top:6px">'+
+    '<p style="font-size:11px;font-weight:800;color:#5C2800;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📊 Desglose por Ronda (del 90%)</p>'+
+    (function(){
+      var tp2=G.rounds.reduce(function(s,r){return s+(r.pct||0);},0)||100;
+      return G.rounds.map(function(r,i){
+        var rp=potBs*((r.pct||0)/tp2);
+        var isDone=r.done,isActive=i===G.currentRound&&G.phase!=='waiting';
+        var bg=isDone?'#E8F5E9':isActive?'linear-gradient(135deg,#7B0D0D,#9B1515)':'#FFF8EC';
+        var col=isDone?'#2E7D32':isActive?'#F5C842':'#3D1A00';
+        var pctCol=isDone?'#43A047':isActive?'#FFE082':'#8B1A1A';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:8px;margin-bottom:4px;background:'+bg+'">'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+          '<span style="background:'+pctCol+';color:'+(isActive?'#3D1A00':'#fff')+';border-radius:99px;padding:2px 8px;font-size:11px;font-weight:900">'+(r.pct||0)+'%</span>'+
+          '<span style="font-size:12px;font-weight:800;color:'+col+'">'+r.name+' ('+MODE_LABELS[r.mode]+')</span>'+
+          (isDone?'<span style="font-size:10px;color:#2E7D32">✓</span>':isActive?'<span style="font-size:10px;color:#F5C842">▶</span>':'')+'</div>'+
+          '<span class="fk" style="color:'+col+';font-size:15px">'+fBs(rp)+'</span></div>';
+      }).join('');
+    }())+
+    '</div></div>'+
 
     '<div class="card"><div class="stitle">🔐 Seguridad</div>'+
     '<label class="lbl">Nueva contraseña (admin)</label>'+
@@ -982,7 +1044,11 @@ function bHistory(){
       return '<tr><td style="font-weight:800;color:#8B1A1A">'+h.rnd+'</td>'+
         '<td><span style="background:#FFF3DC;border:1px solid #E8C870;border-radius:8px;padding:2px 8px;font-weight:700;font-size:11px">'+h.pat+'</span></td>'+
         '<td><span style="background:'+CLR[lof(h.closing)]+';color:#fff;border-radius:99px;padding:2px 8px;font-weight:900;font-size:12px">'+lof(h.closing)+'-'+h.closing+'</span></td>'+
-        '<td style="font-weight:800">'+h.winners.join(', ')+'</td>'+
+        '<td>'+h.winners.map(function(w){
+          return '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 0">'+
+            '<span style="font-weight:800">'+w+'</span>'+waBtn(w,'11px')+
+          '</span>';
+        }).join('<br/>')+'</td>'+
         '<td style="font-weight:900;color:#2E7D32">'+fBs(h.prize)+'</td>'+
         '<td style="text-align:center;color:#8B5E00;font-weight:700">'+h.cnt+'</td>'+
         '<td style="color:#8B5E00;font-size:11px">'+h.ts+'</td></tr>';
@@ -997,7 +1063,7 @@ function aStart(){
   noticeA('🎱 '+G.rounds[G.currentRound].name+' — '+MODE_LABELS[curMode()],'#00695C');
 }
 function aPause(){if(G.phase!=='playing')return;clearInterval(tmr);G.phase='paused';upBadges();renderBoth();}
-function addRnd(){G.rounds.push({id:Date.now(),name:'Ronda '+(G.rounds.length+1),mode:'lines',done:false});renderAdmin();}
+function addRnd(){G.rounds.push({id:Date.now(),name:'Ronda '+(G.rounds.length+1),mode:'lines',done:false,pct:0});renderAdmin();}
 function removeRnd(i){if(G.rounds.length<=1)return;G.rounds.splice(i,1);if(G.currentRound>=G.rounds.length)G.currentRound=G.rounds.length-1;renderAdmin();}
 function setVoice(g){G.voiceGender=g;renderAdmin();}
 function apRef(id,ok){
@@ -1072,23 +1138,36 @@ function renderPlayer(){
   var peEl=document.getElementById('pPot');
   if(peEl){
     if(G.tc>0){peEl.style.display='block';
-      peEl.innerHTML='<div class="stitle">💰 Bote Actual</div>'+
-        '<p class="fk" style="color:#1B5E20;font-size:32px;line-height:1">'+fBs(G.tc*G.priceBs*.9)+'</p>'+
-        '<p style="color:#8B5E00;font-size:11px;margin-top:3px;font-weight:700">'+G.tc+' cartones × '+fBs(G.priceBs)+'</p>';
+      var totalPotP=G.tc*G.priceBs*.9;
+      var totalPctP=G.rounds.reduce(function(s,r){return s+(r.pct||0);},0)||100;
+      var curRndPctP=(G.rounds[G.currentRound]&&G.rounds[G.currentRound].pct!=null)?G.rounds[G.currentRound].pct:(100/G.rounds.length);
+      var curRndPotP=totalPotP*(curRndPctP/totalPctP);
+      peEl.innerHTML='<div class="stitle">💰 Bote de esta Ronda</div>'+
+        '<p class="fk" style="color:#1B5E20;font-size:32px;line-height:1">'+fBs(curRndPotP)+'</p>'+
+        '<p style="color:#8B5E00;font-size:11px;margin-top:3px;font-weight:700">'+G.tc+' cartones × '+fBs(G.priceBs)+' ('+curRndPctP+'% del bote total)</p>';
     }else peEl.style.display='none';
   }
   var pr=document.getElementById('pRight');if(!pr)return;
   // Blocked overlay when game started
   var isBlocked=G.phase==='playing'||G.phase==='finished';
   if(!G.me){
+    // Sección de recuperación de sesión (se usa en ambas pantallas)
+    var recoveryBox=
+      '<div style="margin-top:20px;background:#FFFAF0;border:2px solid #E8C870;border-radius:16px;padding:16px;width:100%;max-width:340px;text-align:left">'+
+      '<p style="font-size:13px;font-weight:900;color:#5C2800;margin-bottom:8px;text-align:center">🔍 ¿Ya tienes una reserva? Ingresa tu celular:</p>'+
+      '<input id="recoverPhone" type="tel" placeholder="04XX-XXXXXXX" style="width:100%;background:#FFF8EC;border:2px solid #E8C870;border-radius:11px;padding:10px 14px;color:#3D1A00;font-size:14px;font-family:Nunito,sans-serif;font-weight:700;margin-bottom:8px;outline:none;box-sizing:border-box"/>'+
+      '<button class="btn bt" style="width:100%;padding:10px;font-size:14px;border-radius:12px" onclick="recoverSession()">📱 Ver mis Cartones</button>'+
+      '</div>';
+
     if(isBlocked){
       pr.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:440px;text-align:center;background:#FFFAF0;border-radius:20px;border:3px solid #E53935;padding:32px">'+
         '<div style="font-size:64px;margin-bottom:12px">🔒</div>'+
         '<h2 class="fk" style="color:#8B1A1A;font-size:32px;margin-bottom:8px">¡Juego en Curso!</h2>'+
         '<p style="color:#8B5E00;font-size:15px;font-weight:700;margin-bottom:8px">La venta de cartones está cerrada.</p>'+
-        '<p style="color:#8B5E00;font-size:13px;font-weight:600">Espera la próxima partida para participar.</p>'+
-        '<div style="margin-top:20px;padding:12px 24px;background:linear-gradient(135deg,#FFF3DC,#FFE0B2);border-radius:12px;border:2px solid #E8C870">'+
-        '<p style="color:#8B1A1A;font-size:13px;font-weight:700">🎱 Ronda en juego: <b>'+G.rounds[Math.min(G.currentRound,G.rounds.length-1)].name+'</b></p></div></div>';
+        '<div style="margin-top:4px;margin-bottom:16px;padding:10px 20px;background:linear-gradient(135deg,#FFF3DC,#FFE0B2);border-radius:12px;border:2px solid #E8C870">'+
+        '<p style="color:#8B1A1A;font-size:13px;font-weight:700">🎱 Ronda en juego: <b>'+G.rounds[Math.min(G.currentRound,G.rounds.length-1)].name+'</b></p></div>'+
+        recoveryBox+
+        '</div>';
       return;
     }
     pr.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:440px;text-align:center;background:#FFFAF0;border-radius:20px;border:3px dashed #E8C870;padding:32px">'+
@@ -1103,13 +1182,20 @@ function renderPlayer(){
         '<p style="background:#8B1A1A;color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:900;margin-bottom:20px">🚫 Cartones agotados</p>')+
       (cartonsLeft()>0&&!isBlocked?
         '<button class="btn brb fk" style="padding:16px 44px;border-radius:99px;font-size:21px" onclick="openReg()">🎱 ¡Reservar mi Cartón!</button>':
-        '');
+        '')+
+      recoveryBox+
+      '</div>';
   }else{
     var p=G.me,mode=curMode();
     var pats=p.cards.map(function(c){return dw(c,G.called,mode);});
     var aw=pats.some(function(x){return x;});
-    var ch='<div style="display:flex;flex-wrap:wrap;gap:14px">';
-    p.cards.forEach(function(c,i){ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode);});
+    var isMobile=window.innerWidth<=600;
+    var compact=isMobile&&p.cards.length>1;
+    var cols=compact?3:(p.cards.length>=4?4:p.cards.length||1);
+    // Container: on mobile 3-col scrollable showing ~9 cards; desktop flex-wrap
+    var containerH=compact?Math.ceil(9/3)*(isMobile?170:220)+'px':'none';
+    var ch='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:'+(compact?'6px':'12px')+';'+(compact&&p.cards.length>9?'max-height:'+containerH+';overflow-y:auto;padding-right:4px;-webkit-overflow-scrolling:touch;':'')+'">';
+    p.cards.forEach(function(c,i){ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode,compact);});
     ch+='</div>';
     var wb=aw?'<div style="background:linear-gradient(135deg,#D4A017,#FB8C00);border-radius:12px;padding:8px 16px;border:2px solid #8B1A1A"><p style="color:#fff;font-weight:900">🏆 '+pats.find(function(x){return x;})+'</p></div>':'';
     pr.innerHTML=
