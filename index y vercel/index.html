@@ -150,16 +150,20 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 .mc-wp{text-align:center;font-size:8px;margin-top:1px;line-height:1}
 
 /* ── PLAYER CARD GRID ────────────────────────────────────── */
+/* Móvil: 3 columnas pequeñas. Desktop: auto-fill con mínimo 130px */
 .cards-grid-mini{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:5px;
   width:100%;
 }
-.cards-grid-normal{
-  display:grid;
-  gap:12px;
+@media(min-width:761px){
+  .cards-grid-mini{
+    grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+    gap:10px;
+  }
 }
+.cards-grid-normal{display:grid;gap:12px;}
 
 
 
@@ -1262,18 +1266,12 @@ function renderPlayer(){
     // Mini para múltiples cartones (CSS se encarga del tamaño según pantalla)
     // Normal solo cuando hay 1 cartón
     var ch;
-    if(multi){
-      var cols=Math.min(p.cards.length,3);
-      ch='<div class="cards-grid-mini" style="grid-template-columns:repeat('+cols+',1fr)">';
-      p.cards.forEach(function(c,i){
-        ch+=bCard(c,G.called,'#'+(i+1),!!pats[i],pats[i],mode,'mini');
-      });
-      ch+='</div>';
-    } else {
-      ch='<div class="cards-grid-normal" style="grid-template-columns:1fr">';
-      ch+=bCard(p.cards[0],G.called,null,!!pats[0],pats[0],mode,'normal');
-      ch+='</div>';
-    }
+    // Siempre usar mini cards — el CSS se encarga del tamaño según pantalla
+    ch='<div class="cards-grid-mini">';
+    p.cards.forEach(function(c,i){
+      ch+=bCard(c,G.called,multi?'#'+(i+1):null,!!pats[i],pats[i],mode,'mini');
+    });
+    ch+='</div>';
     var wb=aw?'<div style="background:linear-gradient(135deg,#D4A017,#FB8C00);border-radius:12px;padding:8px 16px;border:2px solid #8B1A1A"><p style="color:#fff;font-weight:900">🏆 '+pats.find(function(x){return x;})+'</p></div>':'';
     pr.innerHTML=
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">'+
