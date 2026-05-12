@@ -125,16 +125,34 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
   z-index:10;padding:24px;text-align:center}
 
 /* ── BINGO CARD ── */
-.cell{height:38px;display:flex;align-items:center;justify-content:center;
-  border-radius:8px;font-size:13px;font-weight:900;
+.cell{display:flex;align-items:center;justify-content:center;
+  border-radius:8px;font-weight:900;
   background:#F5E8D0;color:#8B5E00;border:1px solid #E8C870;transition:background .25s,color .25s}
 .cell.cfree{background:linear-gradient(135deg,#1E88E5,#8E24AA);
-  color:#fff;border:none;font-size:10px;font-weight:900}
+  color:#fff;border:none;}
 .cell.con{background:linear-gradient(135deg,#8B1A1A,#E53935);color:#fff;border:none;
   box-shadow:0 0 10px rgba(229,57,53,.4)}
 @keyframes cwin{0%,100%{background:linear-gradient(135deg,#D4A017,#FB8C00)}
   50%{background:linear-gradient(135deg,#8B1A1A,#E53935)}}
 .cell.cwin{animation:cwin .5s ease infinite;color:#fff;border:none}
+
+/* ── MOBILE MINI CARDS ── */
+@media(max-width:768px){
+  .card-grid-mobile{
+    display:grid!important;
+    grid-template-columns:repeat(3,1fr)!important;
+    gap:4px!important;
+    max-height:421px!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  .card-grid-mobile .cell{
+    height:16px!important;
+    font-size:7px!important;
+    border-radius:3px!important;
+  }
+  .card-grid-mobile .cell.cfree{font-size:8px!important;}
+}
 
 /* ── TOGGLE ── */
 .tog{width:50px;height:27px;border-radius:14px;cursor:pointer;position:relative;
@@ -178,7 +196,7 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 input[type=range]{width:100%;accent-color:#8B1A1A;margin-bottom:8px}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-thumb{background:linear-gradient(#8B1A1A,#D4A017);border-radius:3px}
-.rnd-cfg{background:#FFF3DC;border:2px solid #E8C870;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rnd-cfg{background:rgba(255,255,255,.12);border:1px solid rgba(245,200,66,.4);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .mode-chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;
   background:#FFF3DC;border:1px solid #E8C870;color:#5C2800;margin:2px}
 .mode-chip.sel{background:#8B1A1A;color:#fff;border-color:#8B1A1A}
@@ -909,20 +927,22 @@ function bAdmin(){
     var rndPot=(G.tc*G.priceBs*.9)*((r.pct||0)/totalPct2);
     return '<div class="rnd-cfg">'+
       '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:6px">'+
-      '<input class="inp" style="margin-bottom:0;font-size:13px" value="'+r.name+'" oninput="G.rounds['+i+'].name=this.value"/>'+
+      '<input class="inp" style="margin-bottom:0;font-size:13px;background:rgba(255,255,255,.15);color:#FFE082;border-color:rgba(245,200,66,.5)" value="'+r.name+'" oninput="G.rounds['+i+'].name=this.value"/>'+
       '<button class="btn br" style="padding:5px 10px;font-size:12px;border-radius:8px" onclick="removeRnd('+i+')">✗</button></div>'+
-      '<select class="sel" style="margin-bottom:6px" onchange="G.rounds['+i+'].mode=this.value;renderAdmin()">'+modeOpts+'</select>'+
+      '<select class="sel" style="margin-bottom:6px;background:rgba(255,255,255,.15);color:#FFE082;border-color:rgba(245,200,66,.5)" onchange="G.rounds['+i+'].mode=this.value;renderAdmin()">'+modeOpts+'</select>'+
       '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'+
-      '<label style="font-size:12px;font-weight:800;color:#5C2800;white-space:nowrap;min-width:80px">🏆 % del bote:</label>'+
+      '<label style="font-size:12px;font-weight:800;color:#FFE082;white-space:nowrap;min-width:60px">🏆 Premio:</label>'+
       '<input type="number" min="0" max="100" value="'+(r.pct||0)+'" '+
-      'style="width:72px;background:#FFF8EC;border:2px solid #E8C870;border-radius:10px;padding:6px 10px;color:#3D1A00;font-size:15px;font-weight:900;outline:none;font-family:Nunito,sans-serif;text-align:center" '+
+      'style="width:68px;background:rgba(255,255,255,.2);border:2px solid #F5C842;border-radius:10px;padding:6px 8px;color:#FFE082;font-size:18px;font-weight:900;outline:none;font-family:Nunito,sans-serif;text-align:center" '+
       'oninput="G.rounds['+i+'].pct=parseInt(this.value)||0;renderAdmin()"/>'+
-      '<span style="font-size:11px;color:#2E7D32;font-weight:800;line-height:1.3">del 90%<br>≈ '+fBs(rndPot)+'</span></div>'+
+      '<span style="color:#F5C842;font-weight:900;font-size:16px">%</span>'+
+      '<span style="font-size:12px;color:#A5D6A7;font-weight:800;line-height:1.3">≈ '+fBs(rndPot)+'</span></div>'+
       '</div>';
   }).join('');
   var totalPctCheck=G.rounds.reduce(function(s,r){return s+(r.pct||0);},0);
-  var pctWarning=totalPctCheck!==100?'<div style="background:#FFF3DC;border:2px solid #FB8C00;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:12px;font-weight:800;color:#E65100">⚠️ Los porcentajes suman '+totalPctCheck+'%. Se recomienda que sumen 100%.</div>':
-    '<div style="background:#E8F5E9;border:2px solid #43A047;border-radius:10px;padding:6px 12px;margin-top:8px;font-size:12px;font-weight:800;color:#2E7D32">✅ Los porcentajes suman 100%</div>';
+  var pctWarning=totalPctCheck!==100?
+    '<div style="background:rgba(251,140,0,.2);border:2px solid #FB8C00;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:13px;font-weight:900;color:#FFE082;text-align:center">⚠️ Suman '+totalPctCheck+'% — deben ser 100%</div>':
+    '<div style="background:rgba(67,160,71,.2);border:2px solid #43A047;border-radius:10px;padding:8px 12px;margin-top:8px;font-size:13px;font-weight:900;color:#A5D6A7;text-align:center">✅ Perfecto — suman 100%</div>';
 
   return (
     '<div class="card" style="border-color:#43A047;background:linear-gradient(135deg,#E8F5E9,#F1F8E9);padding:14px">'+
@@ -942,13 +962,14 @@ function bAdmin(){
     '<input type="range" min="3" max="30" value="'+G.sec+'" oninput="G.sec=+this.value;document.getElementById(\'secLabel\').textContent=this.value+\'s\';if(G.phase===\'playing\'){clearInterval(tmr);tmr=setInterval(callOne,G.sec*1000);}"/>'+
     '</div>'+
 
-    '<div class="card"><div class="stitle">🎯 Rondas de la Partida</div>'+
-    '<div style="background:linear-gradient(135deg,#7B0D0D,#9B1515);border-radius:10px;padding:8px 12px;margin-bottom:10px;border:2px solid #F5C842">'+
-    '<p style="color:#FFE082;font-size:12px;font-weight:800;text-align:center">🏠 El 10% de Admin siempre está garantizado.<br>Los % de cada ronda se aplican sobre el 90% del bote.</p>'+
+    '<div class="card" style="border:2px solid #F5C842;background:linear-gradient(135deg,#3D1A00,#5C2800)">'+
+    '<div class="stitle" style="color:#F5C842;border-color:rgba(245,200,66,.3)">🎯 Premios por Ronda</div>'+
+    '<div style="background:rgba(0,0,0,.25);border-radius:10px;padding:8px 12px;margin-bottom:10px">'+
+    '<p style="color:#FFE082;font-size:12px;font-weight:800;text-align:center">🏠 10% Admin (fijo) + 90% dividido entre rondas según tu %</p>'+
     '</div>'+
     rCfg+
     pctWarning+
-    '<button class="btn bt" style="width:100%;padding:9px;font-size:13px;margin-top:8px" onclick="addRnd()">+ Agregar Ronda</button></div>'+
+    '<button class="btn bt" style="width:100%;padding:9px;font-size:13px;margin-top:8px;background:#F5C842;color:#3D1A00" onclick="addRnd()">+ Agregar Ronda</button></div>'+
 
     '<div class="card"><div class="stitle">🃏 Límite de Cartones</div>'+
     '<label class="lbl">Máximo de cartones por partida</label>'+
@@ -1213,27 +1234,25 @@ function renderPlayer(){
     var p=G.me,mode=curMode();
     var pats=p.cards.map(function(c){return dw(c,G.called,mode);});
     var aw=pats.some(function(x){return x;});
-    var isMobile=window.innerWidth<=640;
-    // On mobile: 3 cols, mini size, max 3 rows visible (~9 cards), scroll for more
-    // On desktop: flex wrap, normal or compact
-    var cardSize=isMobile?'mini':(p.cards.length>3?'compact':'normal');
-    var cols=isMobile?3:(p.cards.length>=4?4:p.cards.length||1);
-    var gap=isMobile?'5px':'12px';
-    // Mobile: fixed height = 3 rows. Estimate one card row height (px) based on mini card
-    // mini card: label(~14px) + header row(~18px) + 5 cell rows(~20px each) + gaps + padding ≈ 140px
-    var rowH=isMobile?148:250;
-    var showRows=3;
-    var gridStyle='display:grid;grid-template-columns:repeat('+cols+',1fr);gap:'+gap+';';
+    // Detect mobile: phones are <=768px
+    var isMobile=window.innerWidth<=768;
+    var cardSize=isMobile?'mini':(p.cards.length>2?'compact':'normal');
+    var cols=isMobile?3:(Math.min(p.cards.length,4)||1);
+    // On mobile: always 3 cols, mini cards, max-height for exactly 3 rows then scroll
+    // Mini card approx height: 4px padding top/bottom + 12px label + 2px gap + 16px header + 2px gap + 5*(18px cell + 1px gap) = ~130px
+    var mobileCardH=135;
+    var gridCSS='display:grid;grid-template-columns:repeat('+cols+',1fr);gap:'+(isMobile?'4px':'12px')+';';
     if(isMobile){
-      gridStyle+='max-height:'+(rowH*showRows+gap.replace('px','')*2)+'px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 4px 2px;';
+      gridCSS+='max-height:'+(mobileCardH*3+16)+'px;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;padding-bottom:4px;';
     }
-    var ch='<div style="'+gridStyle+'">';
+    var ch='<div class="'+(isMobile?'card-grid-mobile':'')+'" style="'+gridCSS+'">';
     p.cards.forEach(function(c,i){
-      ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode,cardSize);
+      var snap=isMobile?'style="scroll-snap-align:start"':'';
+      ch+='<div '+snap+'>'+bCard(c,G.called,p.cards.length>1?'#'+(i+1):null,!!pats[i],pats[i],mode,cardSize)+'</div>';
     });
     ch+='</div>';
     if(isMobile&&p.cards.length>9){
-      ch+='<p style="text-align:center;color:#8B5E00;font-size:11px;font-weight:700;margin-top:6px">↕ Desliza para ver todos los cartones</p>';
+      ch+='<p style="text-align:center;color:#8B5E00;font-size:11px;font-weight:700;margin-top:5px">↕ Desliza para ver más cartones ('+(p.cards.length-9)+' más abajo)</p>';
     }
     var wb=aw?'<div style="background:linear-gradient(135deg,#D4A017,#FB8C00);border-radius:12px;padding:8px 16px;border:2px solid #8B1A1A"><p style="color:#fff;font-weight:900">🏆 '+pats.find(function(x){return x;})+'</p></div>':'';
     pr.innerHTML=
