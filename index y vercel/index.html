@@ -776,33 +776,64 @@ function bTomb(){
 
 
 // ── BUILD CARD ────────────────────────────────────────────
-// size: 'normal' | 'compact' | 'mini' (mobile 9-per-screen)
 function bCard(card,ca,lbl,win,pat,mode,size){
-  var mini=size==='mini', compact=size==='compact'||mini;
-  var cs=mini?'18px':compact?'24px':'38px';
-  var fs=mini?'8px':compact?'10px':'13px';
-  var hs=mini?'16px':compact?'22px':'36px';
-  var hfs=mini?'9px':compact?'12px':'17px';
-  var pad=mini?'4px':compact?'7px':'12px';
-  var gap=mini?'1px':'2px';
-  var br=mini?'8px':compact?'12px':'18px';
-  var lfs=mini?'7px':compact?'9px':'11px';
-  var lmb=mini?'2px':compact?'3px':'6px';
-  var hdr=lbl?'<p style="text-align:center;font-size:'+lfs+';color:#5C2800;font-weight:800;margin-bottom:'+lmb+';line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lbl+'</p>':'';
-  var ch=LTRS.map(function(l){return '<div style="height:'+hs+';display:flex;align-items:center;justify-content:center;border-radius:'+(mini?'3px':'5px')+';background:'+CLR[l]+';color:#fff;font-size:'+hfs+'" class="fk">'+l+'</div>';}).join('');
-  var cells='';
-  for(var row=0;row<5;row++){
-    for(var col=0;col<5;col++){
-      var fr=col===2&&row===2,nm=fr?0:card[col][row],on=ion(card,row,col,ca);
-      var cls='cell'+(fr?' cfree':on?' con'+(win&&on?' cwin':''):'');
-      cells+='<div class="'+cls+'" style="height:'+cs+';font-size:'+fs+'">'+(fr?'★':nm)+'</div>';
+  var mini=size==='mini';
+  var compact=size==='compact';
+
+  // MINI: usa vw para que sea imposible que no quepan 3 columnas en pantalla
+  // Celda = (100vw - 48px margen/gap total) / 3 columnas / 5 celdas por fila
+  // Header letra = misma lógica
+  if(mini){
+    var cellSz='calc((100vw - 48px) / 15)';
+    var hdrSz='calc((100vw - 48px) / 15)';
+    var hdrFs='calc((100vw - 48px) / 22)';
+    var cellFs='calc((100vw - 48px) / 22)';
+    var pad='3px';
+    var gap='1px';
+    var br='7px';
+    var lbl2=lbl?'<p style="text-align:center;font-size:calc((100vw - 48px)/28);color:#5C2800;font-weight:900;margin-bottom:1px;line-height:1;overflow:hidden">'+lbl+'</p>':'';
+    var ch=LTRS.map(function(l){
+      return '<div style="height:'+hdrSz+';display:flex;align-items:center;justify-content:center;border-radius:2px;background:'+CLR[l]+';color:#fff;font-size:'+hdrFs+';font-family:Nunito,sans-serif;font-weight:900">'+l+'</div>';
+    }).join('');
+    var cells='';
+    for(var row=0;row<5;row++){
+      for(var col=0;col<5;col++){
+        var fr=col===2&&row===2,nm=fr?0:card[col][row],on=ion(card,row,col,ca);
+        var cls='cell'+(fr?' cfree':on?' con'+(win&&on?' cwin':''):'');
+        cells+='<div class="'+cls+'" style="height:'+cellSz+';font-size:'+cellFs+';border-radius:2px">'+(fr?'★':nm)+'</div>';
+      }
+    }
+    return '<div style="border-radius:'+br+';padding:'+pad+';background:#FFFAF0;border:'+(win?'2px solid #F5C842':'1px solid #EDD9AA')+'">' +
+      lbl2+
+      '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+';margin-bottom:'+gap+'">'+ch+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+'">'+cells+'</div>'+
+      (win?'<p style="text-align:center;font-size:8px;margin-top:1px">🏆</p>':'')+
+      '</div>';
+  }
+
+  // COMPACT / NORMAL
+  var cs=compact?'26px':'38px';
+  var fs=compact?'11px':'13px';
+  var hs=compact?'24px':'36px';
+  var hfs=compact?'13px':'17px';
+  var pad2=compact?'8px':'12px';
+  var gap2=compact?'2px':'3px';
+  var br2=compact?'12px':'18px';
+  var hdr=lbl?'<p style="text-align:center;font-size:'+(compact?'10px':'11px')+';color:#5C2800;font-weight:800;margin-bottom:'+(compact?'4px':'6px')+'">'+lbl+'</p>':'';
+  var ch2=LTRS.map(function(l){return '<div style="height:'+hs+';display:flex;align-items:center;justify-content:center;border-radius:5px;background:'+CLR[l]+';color:#fff;font-size:'+hfs+'" class="fk">'+l+'</div>';}).join('');
+  var cells2='';
+  for(var row2=0;row2<5;row2++){
+    for(var col2=0;col2<5;col2++){
+      var fr2=col2===2&&row2===2,nm2=fr2?0:card[col2][row2],on2=ion(card,row2,col2,ca);
+      var cls2='cell'+(fr2?' cfree':on2?' con'+(win&&on2?' cwin':''):'');
+      cells2+='<div class="'+cls2+'" style="height:'+cs+';font-size:'+fs+'">'+(fr2?'LIBRE':nm2)+'</div>';
     }
   }
-  return '<div style="border-radius:'+br+';padding:'+pad+';width:100%;background:#FFFAF0;border:'+(win?'2px solid #F5C842':'1px solid #EDD9AA')+';box-shadow:'+(win?'0 0 12px rgba(212,160,23,.5)':'0 2px 6px rgba(139,26,26,.08)')+'">'+
+  return '<div style="border-radius:'+br2+';padding:'+pad2+';width:100%;background:#FFFAF0;border:'+(win?'3px solid #F5C842':'2px solid #EDD9AA')+';box-shadow:'+(win?'0 0 20px rgba(212,160,23,.5)':'0 3px 14px rgba(139,26,26,.1)')+'">'+
     hdr+
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+';margin-bottom:'+gap+'">'+ch+'</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+'">'+cells+'</div>'+
-    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:'+(mini?'7px':'10px')+';margin-top:'+(mini?'2px':'3px')+'">🏆</p>':'')+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap2+';margin-bottom:'+gap2+'">'+ch2+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap2+'">'+cells2+'</div>'+
+    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:'+(compact?'10px':'13px')+';margin-top:'+(compact?'4px':'6px')+'">🏆 '+pat+'</p>':'')+
     '</div>';
 }
 
@@ -1237,22 +1268,26 @@ function renderPlayer(){
     // Detect mobile: phones are <=768px
     var isMobile=window.innerWidth<=768;
     var cardSize=isMobile?'mini':(p.cards.length>2?'compact':'normal');
-    var cols=isMobile?3:(Math.min(p.cards.length,4)||1);
-    // On mobile: always 3 cols, mini cards, max-height for exactly 3 rows then scroll
-    // Mini card approx height: 4px padding top/bottom + 12px label + 2px gap + 16px header + 2px gap + 5*(18px cell + 1px gap) = ~130px
-    var mobileCardH=135;
-    var gridCSS='display:grid;grid-template-columns:repeat('+cols+',1fr);gap:'+(isMobile?'4px':'12px')+';';
+    var ch;
     if(isMobile){
-      gridCSS+='max-height:'+(mobileCardH*3+16)+'px;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;padding-bottom:4px;';
-    }
-    var ch='<div class="'+(isMobile?'card-grid-mobile':'')+'" style="'+gridCSS+'">';
-    p.cards.forEach(function(c,i){
-      var snap=isMobile?'style="scroll-snap-align:start"':'';
-      ch+='<div '+snap+'>'+bCard(c,G.called,p.cards.length>1?'#'+(i+1):null,!!pats[i],pats[i],mode,cardSize)+'</div>';
-    });
-    ch+='</div>';
-    if(isMobile&&p.cards.length>9){
-      ch+='<p style="text-align:center;color:#8B5E00;font-size:11px;font-weight:700;margin-top:5px">↕ Desliza para ver más cartones ('+(p.cards.length-9)+' más abajo)</p>';
+      // 3 columnas fijas, cartones mini con vw, scroll vertical si hay más de 9
+      var gridH=(p.cards.length>9)?'max-height:calc(((100vw - 48px)/15*6 + 4px*6 + 16px + 3px)*3 + 12px);overflow-y:auto;-webkit-overflow-scrolling:touch;':'';
+      ch='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;'+gridH+'">';
+      p.cards.forEach(function(c,i){
+        ch+=bCard(c,G.called,p.cards.length>1?'#'+(i+1):null,!!pats[i],pats[i],mode,'mini');
+      });
+      ch+='</div>';
+      if(p.cards.length>9){
+        ch+='<p style="text-align:center;color:#8B5E00;font-size:11px;font-weight:700;margin-top:5px">↕ Desliza para ver '+(p.cards.length-9)+' cartones más</p>';
+      }
+    } else {
+      var cols=Math.min(p.cards.length,4)||1;
+      var sz=p.cards.length>2?'compact':'normal';
+      ch='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:12px;">';
+      p.cards.forEach(function(c,i){
+        ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode,sz);
+      });
+      ch+='</div>';
     }
     var wb=aw?'<div style="background:linear-gradient(135deg,#D4A017,#FB8C00);border-radius:12px;padding:8px 16px;border:2px solid #8B1A1A"><p style="color:#fff;font-weight:900">🏆 '+pats.find(function(x){return x;})+'</p></div>':'';
     pr.innerHTML=
