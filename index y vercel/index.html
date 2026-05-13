@@ -137,7 +137,7 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 .cell.cwin{animation:cwin .5s ease infinite;color:#fff;border:none}
 
 /* ── MINI CARD (jugador móvil) ───────────────────────────── */
-.mc{background:#FFFAF0;border:1px solid #EDD9AA;border-radius:5px;padding:2px;overflow:hidden;box-sizing:border-box;width:100%}
+.mc{background:#FFFAF0;border:1px solid #EDD9AA;border-radius:5px;padding:2px;overflow:hidden;box-sizing:border-box}
 .mc-winner{border:2px solid #F5C842 !important;box-shadow:0 0 8px rgba(212,160,23,.5)}
 .mc-lbl{text-align:center;font-size:8px;color:#5C2800;font-weight:900;line-height:1.1;margin-bottom:1px;overflow:hidden;white-space:nowrap}
 .mc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin-bottom:1px}
@@ -156,13 +156,13 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 /* ── WRAPPER RESPONSIVO PARA MINI CARTONES ───────────────── */
 .cards-mini-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;box-sizing:border-box}
 
-/* Móvil: tamaño ícono de app (60×60 px) */
+/* Móvil: tamaño ícono de app (72×72 px) */
 @media(max-width:760px){
-  .cards-mini-wrap{grid-template-columns:repeat(auto-fill,60px);gap:6px;justify-content:center}
-  .mc{width:60px;height:60px;padding:1px;flex-shrink:0;box-sizing:border-box}
-  .mc-lbl{font-size:4px !important;margin-bottom:0 !important;line-height:1}
+  .cards-mini-wrap{grid-template-columns:repeat(auto-fill,72px) !important;gap:8px !important;justify-content:center}
+  .mc{width:72px !important;height:72px !important;padding:1px !important;flex-shrink:0 !important;box-sizing:border-box !important;overflow:hidden !important}
+  .mc-lbl{font-size:5px !important;margin-bottom:0 !important;line-height:1.1 !important}
   .mc-grid{gap:0.5px !important;margin-bottom:0.5px !important}
-  .mc-h,.mc-c{height:8px !important;font-size:4px !important;border-radius:1px !important}
+  .mc-h,.mc-c{height:10px !important;font-size:5px !important;border-radius:1px !important;width:100% !important}
   .mc-wp{font-size:5px !important;margin-top:0 !important}
 }
 
