@@ -153,9 +153,23 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 /* ── PLAYER CARD GRID ────────────────────────────────────── */
 .cards-grid-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%}
 
+/* ── WRAPPER RESPONSIVO PARA MINI CARTONES ───────────────── */
+.cards-mini-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;box-sizing:border-box}
+
+/* Móvil: tamaño ícono de app (60×60 px) */
+@media(max-width:760px){
+  .cards-mini-wrap{grid-template-columns:repeat(auto-fill,60px);gap:6px;justify-content:center}
+  .mc{width:60px;height:60px;padding:1px;flex-shrink:0;box-sizing:border-box}
+  .mc-lbl{font-size:4px !important;margin-bottom:0 !important;line-height:1}
+  .mc-grid{gap:0.5px !important;margin-bottom:0.5px !important}
+  .mc-h,.mc-c{height:8px !important;font-size:4px !important;border-radius:1px !important}
+  .mc-wp{font-size:5px !important;margin-top:0 !important}
+}
+
 /* Desktop: cartones más grandes */
 @media(min-width:761px){
   .cards-grid-mini{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .cards-mini-wrap{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
   .mc-h,.mc-c{height:26px !important;font-size:12px !important}
   .mc-lbl{font-size:10px !important}
 }
@@ -1261,7 +1275,7 @@ function renderPlayer(){
     // Mini para múltiples cartones (CSS se encarga del tamaño según pantalla)
     // Normal solo cuando hay 1 cartón
     var ch;
-    ch='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;box-sizing:border-box">';
+    ch='<div class="cards-mini-wrap">';
     p.cards.forEach(function(c,i){
       ch+=bCard(c,G.called,multi?'#'+(i+1):null,!!pats[i],pats[i],mode,'mini');
     });
