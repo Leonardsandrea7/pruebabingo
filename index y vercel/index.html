@@ -137,34 +137,29 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 .cell.cwin{animation:cwin .5s ease infinite;color:#fff;border:none}
 
 /* ── MINI CARD (jugador móvil) ───────────────────────────── */
-.mc{background:#FFFAF0;border:1px solid #EDD9AA;border-radius:6px;padding:3px;overflow:hidden}
-.mc-winner{border:2px solid #F5C842;box-shadow:0 0 10px rgba(212,160,23,.5)}
-.mc-lbl{text-align:center;font-size:9px;color:#5C2800;font-weight:900;line-height:1.1;margin-bottom:2px;overflow:hidden;white-space:nowrap}
+.mc{background:#FFFAF0;border:1px solid #EDD9AA;border-radius:5px;padding:2px;overflow:hidden;box-sizing:border-box;width:100%}
+.mc-winner{border:2px solid #F5C842 !important;box-shadow:0 0 8px rgba(212,160,23,.5)}
+.mc-lbl{text-align:center;font-size:8px;color:#5C2800;font-weight:900;line-height:1.1;margin-bottom:1px;overflow:hidden;white-space:nowrap}
 .mc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin-bottom:1px}
-.mc-h{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:2px;color:#fff;font-size:9px;font-weight:900;font-family:Nunito,sans-serif}
-.mc-c{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:2px;font-size:8px;font-weight:900;background:#F5E8D0;color:#8B5E00;border:1px solid #E8C870}
-.mc-free{background:linear-gradient(135deg,#1E88E5,#8E24AA)!important;color:#fff!important;border:none!important;font-size:10px!important}
+.mc-h,.mc-c{display:flex;align-items:center;justify-content:center;border-radius:2px;font-weight:900;width:100%;height:13px;font-size:7px;box-sizing:border-box}
+.mc-h{color:#fff;font-family:Nunito,sans-serif}
+.mc-c{background:#F5E8D0;color:#8B5E00;border:1px solid #E8C870}
+.mc-free{background:linear-gradient(135deg,#1E88E5,#8E24AA)!important;color:#fff!important;border:none!important}
 .mc-on{background:linear-gradient(135deg,#8B1A1A,#E53935)!important;color:#fff!important;border:none!important}
 @keyframes mcwin{0%,100%{background:linear-gradient(135deg,#D4A017,#FB8C00)}50%{background:linear-gradient(135deg,#8B1A1A,#E53935)}}
 .mc-win{animation:mcwin .5s ease infinite!important;color:#fff!important;border:none!important}
-.mc-wp{text-align:center;font-size:8px;margin-top:1px;line-height:1}
+.mc-wp{text-align:center;font-size:7px;margin-top:1px;line-height:1}
 
 /* ── PLAYER CARD GRID ────────────────────────────────────── */
-/* Móvil: 3 columnas pequeñas. Desktop: auto-fill con mínimo 130px */
-.cards-grid-mini{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:5px;
-  width:100%;
-}
-@media(min-width:761px){
-  .cards-grid-mini{
-    grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
-    gap:10px;
-  }
-}
-.cards-grid-normal{display:grid;gap:12px;}
+.cards-grid-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%}
 
+/* Desktop: cartones más grandes */
+@media(min-width:761px){
+  .cards-grid-mini{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .mc-h,.mc-c{height:26px !important;font-size:12px !important}
+  .mc-lbl{font-size:10px !important}
+}
+.cards-grid-normal{display:grid;gap:12px}
 
 
 /* ── TOGGLE ── */
@@ -1266,8 +1261,7 @@ function renderPlayer(){
     // Mini para múltiples cartones (CSS se encarga del tamaño según pantalla)
     // Normal solo cuando hay 1 cartón
     var ch;
-    // Siempre usar mini cards — el CSS se encarga del tamaño según pantalla
-    ch='<div class="cards-grid-mini">';
+    ch='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;box-sizing:border-box">';
     p.cards.forEach(function(c,i){
       ch+=bCard(c,G.called,multi?'#'+(i+1):null,!!pats[i],pats[i],mode,'mini');
     });
