@@ -150,29 +150,26 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;
 .mc-win{animation:mcwin .5s ease infinite!important;color:#fff!important;border:none!important}
 .mc-wp{text-align:center;font-size:7px;margin-top:1px;line-height:1}
 
-/* ── PLAYER CARD GRID ────────────────────────────────────── */
-.cards-grid-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%}
+/* ── GRID DE CARTONES DEL JUGADOR ──────────────────────────── */
+.pcgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;box-sizing:border-box}
+@media(min-width:761px){.pcgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}}
 
-/* ── WRAPPER RESPONSIVO PARA MINI CARTONES ───────────────── */
-.cards-mini-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;box-sizing:border-box}
-
-/* Móvil: tamaño ícono de app (72×72 px) */
-@media(max-width:760px){
-  .cards-mini-wrap{grid-template-columns:repeat(auto-fill,72px) !important;gap:8px !important;justify-content:center}
-  .mc{width:72px !important;height:72px !important;padding:1px !important;flex-shrink:0 !important;box-sizing:border-box !important;overflow:hidden !important}
-  .mc-lbl{font-size:5px !important;margin-bottom:0 !important;line-height:1.1 !important}
-  .mc-grid{gap:0.5px !important;margin-bottom:0.5px !important}
-  .mc-h,.mc-c{height:10px !important;font-size:5px !important;border-radius:1px !important;width:100% !important}
-  .mc-wp{font-size:5px !important;margin-top:0 !important}
-}
-
-/* Desktop: cartones más grandes */
-@media(min-width:761px){
-  .cards-grid-mini{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-  .cards-mini-wrap{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-  .mc-h,.mc-c{height:26px !important;font-size:12px !important}
-  .mc-lbl{font-size:10px !important}
-}
+/* ── MINI CARTÓN (tamaño controlado por sizeMiniCards() en JS) ── */
+.mcmini{background:#FFFAF0;border:1px solid #EDD9AA;border-radius:4px;overflow:hidden;
+  box-sizing:border-box;display:flex;flex-direction:column;width:100%}
+.mcm-winner{border:2px solid #F5C842!important;box-shadow:0 0 6px rgba(212,160,23,.5)}
+.mcm-lbl{text-align:center;font-weight:900;color:#5C2800;line-height:1;
+  white-space:nowrap;overflow:hidden;flex-shrink:0}
+.mcm-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;flex-shrink:0}
+.mcm-body{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;flex:1}
+.mcm-cell{display:flex;align-items:center;justify-content:center;font-weight:900;
+  box-sizing:border-box;overflow:hidden}
+.mcm-h{color:#fff;border-radius:1px}
+.mcm-cell:not(.mcm-h):not(.mcm-free):not(.mcm-on){background:#F5E8D0;color:#8B5E00;border:1px solid #E8C870}
+.mcm-free{background:linear-gradient(135deg,#1E88E5,#8E24AA)!important;color:#fff!important;border:none!important}
+.mcm-on{background:linear-gradient(135deg,#8B1A1A,#E53935)!important;color:#fff!important;border:none!important}
+.mcm-win{animation:mcwin .5s ease infinite!important;color:#fff!important;border:none!important}
+.mcm-trophy{text-align:center;line-height:1;flex-shrink:0}
 .cards-grid-normal{display:grid;gap:12px}
 
 
@@ -795,38 +792,23 @@ function bCard(card,ca,lbl,win,pat,mode,size){
   var compact=size==='compact';
 
   if(mini){
-    var mob=window.innerWidth<761;
-    var SZ=mob?72:140;
-    var cellH=mob?9:24;
-    var cellFs=mob?5:11;
-    var lblFs=mob?5:10;
-    var gap=mob?0.5:2;
-    var pad=mob?1:4;
-    var br=mob?4:8;
-    var wrapSt='width:'+SZ+'px;min-width:'+SZ+'px;max-width:'+SZ+'px;background:#FFFAF0;border:'
-      +(win?'2px solid #F5C842':'1px solid #EDD9AA')+';border-radius:'+br+'px;padding:'+pad
-      +'px;overflow:hidden;box-sizing:border-box;flex-shrink:0;'
-      +(win?'box-shadow:0 0 8px rgba(212,160,23,.5);':'');
-    var gridSt='display:grid;grid-template-columns:repeat(5,1fr);gap:'+gap+'px;margin-bottom:'+gap+'px;';
-    var hdr=lbl?'<p style="text-align:center;font-size:'+lblFs+'px;color:#5C2800;font-weight:900;line-height:1.1;margin-bottom:'+gap+'px;white-space:nowrap;overflow:hidden">'+lbl+'</p>':'';
+    var hdr=lbl?'<p class="mcm-lbl">'+lbl+'</p>':'';
     var hrow=LTRS.map(function(l){
-      return '<div style="height:'+cellH+'px;display:flex;align-items:center;justify-content:center;font-size:'+cellFs+'px;font-weight:900;color:#fff;background:'+CLR[l]+';border-radius:'+(br-2)+'px">'+l+'</div>';
+      return '<div class="mcm-cell mcm-h" style="background:'+CLR[l]+'">'+l+'</div>';
     }).join('');
     var cells='';
     for(var r=0;r<5;r++){
       for(var c=0;c<5;c++){
         var fr=c===2&&r===2,nm=fr?0:card[c][r],on=ion(card,r,c,ca);
-        var bg=fr?'linear-gradient(135deg,#1E88E5,#8E24AA)':on?'linear-gradient(135deg,#8B1A1A,#E53935)':'#F5E8D0';
-        var fg=fr||on?'#fff':'#8B5E00';
-        var anim=win&&on?'animation:mcwin .5s ease infinite;':'';
-        cells+='<div style="height:'+cellH+'px;display:flex;align-items:center;justify-content:center;font-size:'+cellFs+'px;font-weight:900;background:'+bg+';color:'+fg+';border-radius:'+(br-2)+'px;'+anim+(fr||on?'':' border:1px solid #E8C870;')+'">'+( fr?'★':nm)+'</div>';
+        var extra=fr?' mcm-free':on?' mcm-on'+(win&&on?' mcm-win':''):'';
+        cells+='<div class="mcm-cell'+extra+'">'+(fr?'★':nm)+'</div>';
       }
     }
-    return '<div style="'+wrapSt+'">'
+    return '<div class="mcmini'+(win?' mcm-winner':'')+'">'
       +hdr
-      +'<div style="'+gridSt+'">'+hrow+'</div>'
-      +'<div style="'+gridSt+'">'+cells+'</div>'
-      +(win?'<p style="text-align:center;font-size:'+lblFs+'px;margin-top:'+gap+'px;line-height:1">🏆</p>':'')
+      +'<div class="mcm-row">'+hrow+'</div>'
+      +'<div class="mcm-body">'+cells+'</div>'
+      +(win?'<div class="mcm-trophy">🏆</div>':'')
       +'</div>';
   }
 
@@ -1288,9 +1270,7 @@ function renderPlayer(){
     // Mini para múltiples cartones (CSS se encarga del tamaño según pantalla)
     // Normal solo cuando hay 1 cartón
     var ch;
-    var mob2=window.innerWidth<761;
-    var gridCols=mob2?'repeat(auto-fill,72px)':'repeat(auto-fill,minmax(140px,1fr))';
-    ch='<div style="display:grid;grid-template-columns:'+gridCols+';gap:'+(mob2?'8px':'10px')+';width:100%;box-sizing:border-box;'+(mob2?'justify-content:center;':'')+'">';
+    ch='<div class="pcgrid">';
     p.cards.forEach(function(c,i){
       ch+=bCard(c,G.called,multi?'#'+(i+1):null,!!pats[i],pats[i],mode,'mini');
     });
@@ -1301,6 +1281,7 @@ function renderPlayer(){
       '<div><h2 class="fk rbow" style="font-size:22px">Mis Cartones</h2>'+
       '<p style="color:#8B5E00;font-size:12px;font-weight:700">👤 '+p.name+' — '+p.cards.length+' cartón'+(p.cards.length>1?'es':'')+'</p></div>'+wb+'</div>'+
       ch+(!isBlocked?'<button style="margin-top:14px;padding:7px 18px;border-radius:10px;background:#FFFAF0;border:2px solid #E8C870;color:#5C2800;font-size:12px;cursor:pointer;font-weight:800" onclick="G.me=null;renderPlayer()">↩ Cambiar jugador</button>':'');
+  setTimeout(sizeMiniCards,30);
   }
   upBadges();
 }
@@ -1400,6 +1381,46 @@ function validateMonto(monto,qty){
 G.pool=sh(Array.from({length:75},function(_,i){return i+1;}));
 loadVoices();
 checkRoute();
+
+// ── TAMAÑO DINÁMICO DE MINI CARTONES ─────────────────────────
+function sizeMiniCards(){
+  var grid=document.querySelector('.pcgrid');
+  if(!grid)return;
+  var W=grid.offsetWidth; // ancho real del contenedor renderizado
+  var isMob=window.innerWidth<761;
+  var cols=isMob?4:Math.max(3,Math.floor(W/140));
+  var gap=isMob?4:10;
+  var cardW=Math.floor((W-(cols-1)*gap)/cols);
+  var cardH=cardW; // cuadrado perfecto
+  // Ajustar el grid
+  grid.style.gridTemplateColumns='repeat('+cols+','+cardW+'px)';
+  grid.style.gap=gap+'px';
+  if(isMob)grid.style.justifyContent='center';
+  // Calcular fuentes según tamaño del cartón
+  var fs=Math.max(4,Math.floor(cardW*0.11));   // fuente celdas
+  var lfs=Math.max(4,Math.floor(cardW*0.09));  // fuente label
+  var cellH=Math.floor((cardH-(lfs+2))/6);     // 6 filas: 1 BINGO + 5 números
+  // Aplicar a cada cartón
+  var cards=grid.querySelectorAll('.mcmini');
+  cards.forEach(function(card){
+    card.style.width=cardW+'px';
+    card.style.height=cardH+'px';
+    card.style.minWidth=cardW+'px';
+    card.style.maxWidth=cardW+'px';
+    var lbl=card.querySelector('.mcm-lbl');
+    if(lbl)lbl.style.fontSize=lfs+'px';
+    var rows=card.querySelectorAll('.mcm-row, .mcm-body');
+    rows.forEach(function(row){row.style.gap='1px';});
+    var cells=card.querySelectorAll('.mcm-cell');
+    cells.forEach(function(cell){
+      cell.style.height=cellH+'px';
+      cell.style.fontSize=fs+'px';
+    });
+    var trophy=card.querySelector('.mcm-trophy');
+    if(trophy)trophy.style.fontSize=lfs+'px';
+  });
+}
+window.addEventListener('resize',sizeMiniCards);
 </script>
 </body>
 </html>
